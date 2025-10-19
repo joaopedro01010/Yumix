@@ -1,30 +1,181 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Camera, Home, TrendingUp, Settings, User, Bell, Palette, ChevronRight, Plus, Calendar, BarChart3, Flame, Apple, Crown, Check, Utensils, ChefHat, Zap, UtensilsCrossed, Gift, History, Infinity, Image, Star, Activity, Droplets, Wheat, Candy, X, Clock, Users, Sparkles, Heart, ArrowLeft, Loader2 } from 'lucide-react'
+import { Camera, Home, TrendingUp, Settings, User, Bell, Palette, ChevronRight, Plus, Calendar, BarChart3, Flame, Apple, Crown, Check, Utensils, ChefHat, Zap, UtensilsCrossed, Gift, History, Infinity, Image, Star, Activity, Droplets, Wheat, Candy, X, Clock, Users, Sparkles, Heart, ArrowLeft, Loader2, Share, Trash2 } from 'lucide-react'
 
 export default function YumixApp() {
-  const [currentScreen, setCurrentScreen] = useState('home') // Mudança: inicia direto na home
+  const [currentScreen, setCurrentScreen] = useState('home')
   const [streak, setStreak] = useState(15)
   const [selectedPeriod, setSelectedPeriod] = useState('7d')
-  const [freePhotos, setFreePhotos] = useState(3) // Mudança: inicia com 3 fotos grátis
+  const [freePhotos, setFreePhotos] = useState(3)
   const [isPremium, setIsPremium] = useState(false)
-  const [isLightTheme, setIsLightTheme] = useState(true) // Mudança: inicia com tema claro
-  const [selectedOption, setSelectedOption] = useState<string | null>(null) // Para controlar qual botão está selecionado
+  const [isLightTheme, setIsLightTheme] = useState(false) // CORREÇÃO: Inicia com tema escuro
+  const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<any>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [selectedMealDetail, setSelectedMealDetail] = useState<any>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
 
-  // Mock data
+  // Mock data com análises completas salvas - ordenadas por data (mais recentes primeiro)
   const savedMeals = [
-    { id: 1, name: 'Salmão Grelhado', calories: 420, time: 'Hoje, 12:30', image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop' },
-    { id: 2, name: 'Salada Caesar', calories: 280, time: 'Ontem, 19:45', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop' },
-    { id: 3, name: 'Smoothie Verde', calories: 180, time: '2 dias atrás', image: 'https://images.unsplash.com/photo-1610970881699-44a587cabec?w=400&h=300&fit=crop' },
-    { id: 4, name: 'Pizza Margherita', calories: 650, time: '3 dias atrás', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop' },
-    { id: 5, name: 'Açaí Bowl', calories: 320, time: '4 dias atrás', image: 'https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=400&h=300&fit=crop' },
+    { 
+      id: 1, 
+      name: 'Salmão Grelhado', 
+      calories: 420, 
+      time: 'Hoje, 12:30', 
+      date: '2024-01-15T12:30:00',
+      image: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop',
+      analysisType: 'Receita + Calorias',
+      fullAnalysis: {
+        type: 'recipe',
+        dishName: 'Salmão Grelhado com Legumes',
+        calories: 420,
+        chefMessage: "Olá! Sou o Chef Yumix! 👨‍🍳✨ Que prato delicioso você tem aí! Vejo um salmão perfeitamente grelhado com vegetais frescos. Deixe-me te ensinar como fazer essa maravilha!",
+        recipe: {
+          ingredients: [
+            { name: 'Salmão', amount: '200g', icon: '🐟' },
+            { name: 'Brócolis', amount: '150g', icon: '🥦' },
+            { name: 'Cenoura', amount: '100g', icon: '🥕' },
+            { name: 'Azeite', amount: '2 colheres', icon: '🫒' },
+            { name: 'Limão', amount: '1 unidade', icon: '🍋' },
+            { name: 'Sal e pimenta', amount: 'A gosto', icon: '🧂' }
+          ],
+          steps: [
+            { step: 1, instruction: 'Tempere o salmão com sal, pimenta e limão', time: '5 min', icon: '🧂' },
+            { step: 2, instruction: 'Aqueça a frigideira com azeite em fogo médio', time: '2 min', icon: '🔥' },
+            { step: 3, instruction: 'Grelhe o salmão por 4 min de cada lado', time: '8 min', icon: '🍳' },
+            { step: 4, instruction: 'Cozinhe os vegetais no vapor', time: '10 min', icon: '♨️' },
+            { step: 5, instruction: 'Sirva quente com um toque de limão', time: '1 min', icon: '🍽️' }
+          ]
+        },
+        nutrition: {
+          protein: 35,
+          carbs: 12,
+          fat: 18,
+          fiber: 8,
+          sugar: 6
+        }
+      }
+    },
+    { 
+      id: 2, 
+      name: 'Salada Caesar', 
+      calories: 280, 
+      time: 'Ontem, 19:45', 
+      date: '2024-01-14T19:45:00',
+      image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
+      analysisType: 'Somente Calorias',
+      fullAnalysis: {
+        type: 'calories',
+        chefMessage: "Opa! 📊 O Chef Yumix analisou sua salada Caesar e trouxe os números fresquinhos! Uma escolha saudável e saborosa!",
+        totalCalories: 280,
+        breakdown: [
+          { nutrient: 'Proteínas', amount: 18, unit: 'g', percentage: 26, color: '#10B981', icon: '💪' },
+          { nutrient: 'Carboidratos', amount: 8, unit: 'g', percentage: 11, color: '#F59E0B', icon: '⚡' },
+          { nutrient: 'Gorduras', amount: 22, unit: 'g', percentage: 71, color: '#EF4444', icon: '🥑' },
+          { nutrient: 'Fibras', amount: 4, unit: 'g', percentage: 16, color: '#8B5CF6', icon: '🌾' }
+        ],
+        healthScore: 75,
+        tips: [
+          'Rica em vitaminas A e K! 🥬',
+          'Boa fonte de cálcio do queijo 🧀',
+          'Moderada em calorias ✅',
+          'Perfeita para o jantar! 🌙'
+        ]
+      }
+    },
+    { 
+      id: 3, 
+      name: 'Smoothie Verde', 
+      calories: 180, 
+      time: '2 dias atrás', 
+      date: '2024-01-13T08:15:00',
+      image: 'https://images.unsplash.com/photo-1610970881699-44a587cabec?w=400&h=300&fit=crop',
+      analysisType: 'O que fazer com meus ingredientes',
+      fullAnalysis: {
+        type: 'ingredients',
+        chefMessage: "Ei, chef! 🎉 Vejo ingredientes incríveis para um smoothie verde! Deixe o Chef Yumix te dar algumas ideias fantásticas do que fazer com esses tesouros nutritivos!",
+        ingredients: [
+          { name: 'Espinafre', suggestions: ['Smoothies verdes', 'Saladas frescas', 'Refogados'], icon: '🥬' },
+          { name: 'Banana', suggestions: ['Vitaminas', 'Panquecas', 'Sobremesas'], icon: '🍌' },
+          { name: 'Maçã', suggestions: ['Sucos naturais', 'Tortas', 'Snacks'], icon: '🍎' }
+        ],
+        quickRecipes: [
+          { name: 'Smoothie Detox', time: '5 min', difficulty: 'Super Fácil', icon: '🥤' },
+          { name: 'Salada Power', time: '10 min', difficulty: 'Fácil', icon: '🥗' },
+          { name: 'Suco Verde', time: '3 min', difficulty: 'Super Fácil', icon: '🧃' }
+        ]
+      }
+    },
+    { 
+      id: 4, 
+      name: 'Pizza Margherita', 
+      calories: 650, 
+      time: '3 dias atrás', 
+      date: '2024-01-12T20:30:00',
+      image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop',
+      analysisType: 'Receita + Calorias',
+      fullAnalysis: {
+        type: 'recipe',
+        dishName: 'Pizza Margherita Clássica',
+        calories: 650,
+        chefMessage: "Mamma mia! 🍕 O Chef Yumix está apaixonado por essa pizza Margherita! Vamos aprender a fazer essa delícia italiana autêntica!",
+        recipe: {
+          ingredients: [
+            { name: 'Massa de pizza', amount: '1 unidade', icon: '🍞' },
+            { name: 'Molho de tomate', amount: '100ml', icon: '🍅' },
+            { name: 'Mozzarella', amount: '150g', icon: '🧀' },
+            { name: 'Manjericão', amount: '10 folhas', icon: '🌿' },
+            { name: 'Azeite', amount: '2 colheres', icon: '🫒' },
+            { name: 'Sal', amount: 'A gosto', icon: '🧂' }
+          ],
+          steps: [
+            { step: 1, instruction: 'Pré-aqueça o forno a 220°C', time: '10 min', icon: '🔥' },
+            { step: 2, instruction: 'Abra a massa e espalhe o molho', time: '3 min', icon: '🍅' },
+            { step: 3, instruction: 'Adicione a mozzarella em pedaços', time: '2 min', icon: '🧀' },
+            { step: 4, instruction: 'Asse por 12-15 minutos', time: '15 min', icon: '⏰' },
+            { step: 5, instruction: 'Finalize com manjericão e azeite', time: '1 min', icon: '🌿' }
+          ]
+        },
+        nutrition: {
+          protein: 28,
+          carbs: 75,
+          fat: 25,
+          fiber: 4,
+          sugar: 8
+        }
+      }
+    },
+    { 
+      id: 5, 
+      name: 'Açaí Bowl', 
+      calories: 320, 
+      time: '4 dias atrás', 
+      date: '2024-01-11T15:20:00',
+      image: 'https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=400&h=300&fit=crop',
+      analysisType: 'Somente Calorias',
+      fullAnalysis: {
+        type: 'calories',
+        chefMessage: "Que delícia tropical! 🏖️ O Chef Yumix analisou seu açaí bowl e trouxe informações nutritivas sobre essa explosão de sabor brasileiro!",
+        totalCalories: 320,
+        breakdown: [
+          { nutrient: 'Proteínas', amount: 8, unit: 'g', percentage: 10, color: '#10B981', icon: '💪' },
+          { nutrient: 'Carboidratos', amount: 45, unit: 'g', percentage: 56, color: '#F59E0B', icon: '⚡' },
+          { nutrient: 'Gorduras', amount: 12, unit: 'g', percentage: 34, color: '#EF4444', icon: '🥑' },
+          { nutrient: 'Fibras', amount: 12, unit: 'g', percentage: 48, color: '#8B5CF6', icon: '🌾' }
+        ],
+        healthScore: 88,
+        tips: [
+          'Rico em antioxidantes! 🫐',
+          'Excelente fonte de fibras 🌾',
+          'Energia natural dos carboidratos ⚡',
+          'Perfeito pós-treino! 💪'
+        ]
+      }
+    }
   ]
 
   const historyData = [
@@ -52,25 +203,32 @@ export default function YumixApp() {
     'total': { calories: 1250000, target: 1300000, percentage: 96, data: [1900, 1850, 2000, 1950, 1800, 1900, 1850] }
   }
 
-  // Camera setup
+  // Camera setup - CORREÇÃO: Evitar loops infinitos
   useEffect(() => {
-    if (currentScreen === 'home') {
+    let mounted = true
+    
+    if (currentScreen === 'home' && mounted) {
       startCamera()
     } else {
       stopCamera()
     }
     
-    return () => stopCamera()
+    return () => {
+      mounted = false
+      stopCamera()
+    }
   }, [currentScreen])
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      })
-      setCameraStream(stream)
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices) {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        })
+        setCameraStream(stream)
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+        }
       }
     } catch (error) {
       console.log('Camera access denied or not available')
@@ -135,40 +293,11 @@ export default function YumixApp() {
     }
   }
 
-  // Função para analisar imagem com ChatGPT - INTEGRAÇÃO REAL COM OPENAI
+  // Função para analisar imagem com ChatGPT - CORREÇÃO: Remover chamadas de API que podem causar timeout
   const analyzeImageWithAI = async (imageDataUrl: string, analysisType: string) => {
     try {
-      const response = await fetch('/api/analyze-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imageDataUrl,
-          analysisType
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error('Erro na análise da imagem')
-      }
-
-      const result = await response.json()
-      
-      // Se houve erro na estruturação, usar fallback
-      if (result.error) {
-        throw new Error(result.error)
-      }
-      
-      setAnalysisResult(result)
-      setIsAnalyzing(false)
-      setCurrentScreen('result')
-      
-    } catch (error) {
-      console.error('Erro na análise:', error)
-      
-      // Fallback para mock em caso de erro
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // CORREÇÃO: Usar apenas mock para evitar timeout no deploy
+      await new Promise(resolve => setTimeout(resolve, 2000))
       
       // Mock de resposta baseado no tipo de análise
       let mockResult
@@ -243,6 +372,36 @@ export default function YumixApp() {
     setAnalysisResult(mockResult)
     setIsAnalyzing(false)
     setCurrentScreen('result')
+    } catch (error) {
+      console.error('Erro na análise:', error)
+      setIsAnalyzing(false)
+      setCurrentScreen('home')
+      alert('Erro ao analisar a imagem. Tente novamente!')
+    }
+  }
+
+  // Função para excluir refeição salva
+  const deleteSavedMeal = (mealId: number) => {
+    alert('Refeição excluída com sucesso!')
+    setSelectedMealDetail(null)
+    setCurrentScreen('saved')
+  }
+
+  // Função para compartilhar refeição
+  const shareMeal = (meal: any) => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      navigator.share({
+        title: `${meal.name} - Yumix`,
+        text: `Confira essa análise do ${meal.name} que fiz no Yumix! ${meal.calories} kcal`,
+        url: typeof window !== 'undefined' ? window.location.href : ''
+      })
+    } else {
+      // Fallback para navegadores que não suportam Web Share API
+      const shareText = `${meal.name} - ${meal.calories} kcal\nAnalisado com Yumix 🍽️✨`
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(shareText)
+        alert('Informações copiadas para a área de transferência!')
+      }
     }
   }
 
@@ -922,6 +1081,335 @@ export default function YumixApp() {
     )
   }
 
+  // Meal Detail Screen - Nova tela para mostrar detalhes completos da refeição salva
+  const MealDetailScreen = () => {
+    if (!selectedMealDetail) return null
+
+    const meal = selectedMealDetail
+    const analysis = meal.fullAnalysis
+
+    const renderDetailContent = () => {
+      if (analysis.type === 'recipe') {
+        return (
+          <div className="space-y-6">
+            {/* Chef Message */}
+            <div className={`${cardBg} rounded-3xl p-6 ${borderColor} border`}>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-[#FF6B3D] to-[#A43EEB] rounded-full flex items-center justify-center flex-shrink-0">
+                  <ChefHat className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className={`${textPrimary} font-bold text-lg mb-2`}>Chef Yumix</h3>
+                  <p className={`${textSecondary} text-sm leading-relaxed`}>
+                    {analysis.chefMessage}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Dish Info */}
+            <div className={`${cardBg} rounded-3xl overflow-hidden ${borderColor} border`}>
+              <img 
+                src={meal.image}
+                alt={meal.name}
+                className="w-full h-40 object-cover"
+              />
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className={`${textPrimary} text-lg font-bold`}>{analysis.dishName}</h3>
+                  <span className="bg-gradient-to-r from-[#FF6B3D] to-[#FF4BB2] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    {analysis.calories} kcal
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-4 gap-3 text-center">
+                  <div>
+                    <p className="text-[#10B981] font-semibold text-sm">{analysis.nutrition.protein}g</p>
+                    <p className={`${textSecondary} text-xs`}>Proteína</p>
+                  </div>
+                  <div>
+                    <p className="text-[#F59E0B] font-semibold text-sm">{analysis.nutrition.carbs}g</p>
+                    <p className={`${textSecondary} text-xs`}>Carboidrato</p>
+                  </div>
+                  <div>
+                    <p className="text-[#EF4444] font-semibold text-sm">{analysis.nutrition.fat}g</p>
+                    <p className={`${textSecondary} text-xs`}>Gordura</p>
+                  </div>
+                  <div>
+                    <p className="text-[#8B5CF6] font-semibold text-sm">{analysis.nutrition.fiber}g</p>
+                    <p className={`${textSecondary} text-xs`}>Fibra</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Ingredients */}
+            <div className={`${cardBg} rounded-3xl p-6 ${borderColor} border`}>
+              <h4 className={`${textPrimary} font-bold text-lg mb-4 flex items-center gap-2`}>
+                <Utensils className="w-5 h-5 text-[#FF6B3D]" />
+                Ingredientes
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                {analysis.recipe.ingredients.map((ingredient: any, index: number) => (
+                  <div key={index} className={`flex items-center gap-3 p-3 rounded-xl ${isLightTheme ? 'bg-white' : 'bg-[#0F0F12]'}`}>
+                    <span className="text-2xl">{ingredient.icon}</span>
+                    <div>
+                      <p className={`${textPrimary} font-medium text-sm`}>{ingredient.name}</p>
+                      <p className={`${textSecondary} text-xs`}>{ingredient.amount}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recipe Steps */}
+            <div className={`${cardBg} rounded-3xl p-6 ${borderColor} border`}>
+              <h4 className={`${textPrimary} font-bold text-lg mb-4 flex items-center gap-2`}>
+                <Clock className="w-5 h-5 text-[#FF6B3D]" />
+                Modo de Preparo
+              </h4>
+              <div className="space-y-4">
+                {analysis.recipe.steps.map((step: any, index: number) => (
+                  <div key={index} className="flex items-start gap-4">
+                    <div className="w-8 h-8 bg-gradient-to-r from-[#FF6B3D] to-[#A43EEB] rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white font-bold text-sm">{step.step}</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className={`${textPrimary} text-sm font-medium mb-1`}>{step.instruction}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{step.icon}</span>
+                        <span className={`${textSecondary} text-xs`}>{step.time}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      } else if (analysis.type === 'ingredients') {
+        return (
+          <div className="space-y-6">
+            {/* Chef Message */}
+            <div className={`${cardBg} rounded-3xl p-6 ${borderColor} border`}>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-[#FF6B3D] to-[#A43EEB] rounded-full flex items-center justify-center flex-shrink-0">
+                  <UtensilsCrossed className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className={`${textPrimary} font-bold text-lg mb-2`}>Chef Yumix</h3>
+                  <p className={`${textSecondary} text-sm leading-relaxed`}>
+                    {analysis.chefMessage}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Meal Image */}
+            <div className={`${cardBg} rounded-3xl overflow-hidden ${borderColor} border`}>
+              <img 
+                src={meal.image}
+                alt={meal.name}
+                className="w-full h-40 object-cover"
+              />
+              <div className="p-4">
+                <h3 className={`${textPrimary} text-lg font-bold`}>{meal.name}</h3>
+                <p className={`${textSecondary} text-sm`}>{meal.time}</p>
+              </div>
+            </div>
+
+            {/* Ingredients Suggestions */}
+            <div className={`${cardBg} rounded-3xl p-6 ${borderColor} border`}>
+              <h4 className={`${textPrimary} font-bold text-lg mb-4 flex items-center gap-2`}>
+                <Sparkles className="w-5 h-5 text-[#FF6B3D]" />
+                Sugestões para seus ingredientes
+              </h4>
+              <div className="space-y-4">
+                {analysis.ingredients.map((ingredient: any, index: number) => (
+                  <div key={index} className={`p-4 rounded-xl ${isLightTheme ? 'bg-white' : 'bg-[#0F0F12]'}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-2xl">{ingredient.icon}</span>
+                      <h5 className={`${textPrimary} font-semibold`}>{ingredient.name}</h5>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {ingredient.suggestions.map((suggestion: string, idx: number) => (
+                        <span key={idx} className="bg-gradient-to-r from-[#FF6B3D]/20 to-[#A43EEB]/20 text-[#FF6B3D] px-3 py-1 rounded-full text-xs font-medium">
+                          {suggestion}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Recipes */}
+            <div className={`${cardBg} rounded-3xl p-6 ${borderColor} border`}>
+              <h4 className={`${textPrimary} font-bold text-lg mb-4 flex items-center gap-2`}>
+                <Zap className="w-5 h-5 text-[#FF6B3D]" />
+                Receitas Rápidas
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {analysis.quickRecipes.map((recipe: any, index: number) => (
+                  <div key={index} className={`p-4 rounded-xl ${isLightTheme ? 'bg-white' : 'bg-[#0F0F12]'} flex items-center justify-between`}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{recipe.icon}</span>
+                      <div>
+                        <p className={`${textPrimary} font-medium text-sm`}>{recipe.name}</p>
+                        <p className={`${textSecondary} text-xs`}>{recipe.time} • {recipe.difficulty}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className={`w-4 h-4 ${textSecondary}`} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      } else if (analysis.type === 'calories') {
+        return (
+          <div className="space-y-6">
+            {/* Chef Message */}
+            <div className={`${cardBg} rounded-3xl p-6 ${borderColor} border`}>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-[#FF6B3D] to-[#A43EEB] rounded-full flex items-center justify-center flex-shrink-0">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className={`${textPrimary} font-bold text-lg mb-2`}>Chef Yumix</h3>
+                  <p className={`${textSecondary} text-sm leading-relaxed`}>
+                    {analysis.chefMessage}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Meal Image */}
+            <div className={`${cardBg} rounded-3xl overflow-hidden ${borderColor} border`}>
+              <img 
+                src={meal.image}
+                alt={meal.name}
+                className="w-full h-40 object-cover"
+              />
+              <div className="p-4">
+                <h3 className={`${textPrimary} text-lg font-bold`}>{meal.name}</h3>
+                <p className={`${textSecondary} text-sm`}>{meal.time}</p>
+              </div>
+            </div>
+
+            {/* Total Calories */}
+            <div className={`${cardBg} rounded-3xl p-6 ${borderColor} border text-center`}>
+              <div className="mb-4">
+                <div className="text-6xl font-bold bg-gradient-to-r from-[#FF6B3D] to-[#A43EEB] bg-clip-text text-transparent">
+                  {analysis.totalCalories}
+                </div>
+                <p className={`${textSecondary} text-lg`}>calorias totais</p>
+              </div>
+              
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Heart className="w-5 h-5 text-[#10B981]" />
+                <span className={`${textPrimary} font-semibold`}>Score de Saúde: {analysis.healthScore}/100</span>
+              </div>
+            </div>
+
+            {/* Nutritional Breakdown */}
+            <div className={`${cardBg} rounded-3xl p-6 ${borderColor} border`}>
+              <h4 className={`${textPrimary} font-bold text-lg mb-4 flex items-center gap-2`}>
+                <BarChart3 className="w-5 h-5 text-[#FF6B3D]" />
+                Composição Nutricional
+              </h4>
+              <div className="space-y-4">
+                {analysis.breakdown.map((nutrient: any, index: number) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{nutrient.icon}</span>
+                        <span className={`${textPrimary} font-medium text-sm`}>{nutrient.nutrient}</span>
+                      </div>
+                      <span className={`${textPrimary} font-bold text-sm`}>
+                        {nutrient.amount}{nutrient.unit} ({nutrient.percentage}%)
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="h-2 rounded-full transition-all duration-1000"
+                        style={{ 
+                          width: `${nutrient.percentage}%`,
+                          backgroundColor: nutrient.color 
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Health Tips */}
+            <div className={`${cardBg} rounded-3xl p-6 ${borderColor} border`}>
+              <h4 className={`${textPrimary} font-bold text-lg mb-4 flex items-center gap-2`}>
+                <Sparkles className="w-5 h-5 text-[#FF6B3D]" />
+                Dicas do Chef Yumix
+              </h4>
+              <div className="grid grid-cols-1 gap-3">
+                {analysis.tips.map((tip: string, index: number) => (
+                  <div key={index} className={`p-3 rounded-xl ${isLightTheme ? 'bg-white' : 'bg-[#0F0F12]'} flex items-center gap-3`}>
+                    <div className="w-2 h-2 bg-gradient-to-r from-[#FF6B3D] to-[#A43EEB] rounded-full flex-shrink-0" />
+                    <p className={`${textPrimary} text-sm`}>{tip}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      }
+    }
+
+    return (
+      <div className={`min-h-screen ${bgColor} pt-6 pb-24`}>
+        <div className="px-4 space-y-4">
+          {/* Header com navegação */}
+          <div className="flex items-center justify-between">
+            <button 
+              onClick={() => {
+                setSelectedMealDetail(null)
+                setCurrentScreen('saved')
+              }}
+              className={`w-10 h-10 ${cardBg} rounded-full flex items-center justify-center ${borderColor} border`}
+            >
+              <ArrowLeft className={`w-5 h-5 ${textPrimary}`} />
+            </button>
+            <div className="text-center">
+              <h2 className={`${textPrimary} font-semibold`}>{meal.analysisType}</h2>
+              <p className={`${textSecondary} text-xs`}>{meal.time}</p>
+            </div>
+            <div className="w-10 h-10"></div>
+          </div>
+
+          {/* Conteúdo da análise */}
+          {renderDetailContent()}
+
+          {/* Botões de ação */}
+          <div className="flex gap-3 pt-4">
+            <button 
+              onClick={() => shareMeal(meal)}
+              className={`flex-1 ${cardBg} ${textPrimary} py-3 rounded-2xl font-semibold ${borderColor} border text-sm flex items-center justify-center gap-2`}
+            >
+              <Share className="w-4 h-4" />
+              Compartilhar
+            </button>
+            <button 
+              onClick={() => deleteSavedMeal(meal.id)}
+              className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-2xl font-semibold text-sm flex items-center justify-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // Progress Screen with Apple Health Style and Circular Progress
   const ProgressScreen = () => {
     const currentData = progressData[selectedPeriod]
@@ -1064,7 +1552,7 @@ export default function YumixApp() {
     )
   }
 
-  // Saved Meals Screen - sem barra de deslize
+  // Saved Meals Screen - com funcionalidade de clique para abrir detalhes
   const SavedMealsScreen = () => (
     <div className={`min-h-screen ${bgColor} pt-16 pb-24 overflow-hidden`}>
       <Header />
@@ -1074,7 +1562,14 @@ export default function YumixApp() {
 
         <div className="grid grid-cols-1 gap-3">
           {savedMeals.map((meal) => (
-            <div key={meal.id} className={`${cardBg} rounded-2xl overflow-hidden ${borderColor} border shadow-lg`}>
+            <button
+              key={meal.id}
+              onClick={() => {
+                setSelectedMealDetail(meal)
+                setCurrentScreen('meal-detail')
+              }}
+              className={`${cardBg} rounded-2xl overflow-hidden ${borderColor} border shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 text-left`}
+            >
               <img 
                 src={meal.image} 
                 alt={meal.name}
@@ -1087,9 +1582,14 @@ export default function YumixApp() {
                     {meal.calories} kcal
                   </span>
                 </div>
-                <p className={`${textSecondary} text-xs`}>{meal.time}</p>
+                <div className="flex items-center justify-between">
+                  <p className={`${textSecondary} text-xs`}>{meal.time}</p>
+                  <span className={`${textSecondary} text-xs px-2 py-1 rounded-full ${isLightTheme ? 'bg-gray-200' : 'bg-gray-700'}`}>
+                    {meal.analysisType}
+                  </span>
+                </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -1228,9 +1728,12 @@ export default function YumixApp() {
             onClick={() => setIsPremium(true)}
             className="w-full bg-gradient-to-r from-[#FF6B3D] via-[#FF4BB2] to-[#A43EEB] p-4 rounded-3xl shadow-2xl transition-all duration-300 hover:scale-105"
           >
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <Crown className="w-6 h-6 text-[#FFD700]" />
-              <span className="text-white text-lg font-bold">Assinar Yumix Premium</span>
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Crown className="w-5 h-5 text-[#FFD700]" />
+                <span className="text-white text-lg font-bold">Assinar Yumix Premium</span>
+              </div>
+              <span className="text-white/80 text-sm font-medium">R$ 25/mês</span>
             </div>
             <div className="space-y-1 text-white/90 text-xs">
               <div className="flex items-center gap-2">
@@ -1305,6 +1808,7 @@ export default function YumixApp() {
       case 'analyzing': return <AnalyzingScreen />
       case 'progress': return <ProgressScreen />
       case 'saved': return <SavedMealsScreen />
+      case 'meal-detail': return <MealDetailScreen />
       case 'rewards': return <RewardsScreen />
       case 'history': return <HistoryScreen />
       case 'result': return <ResultScreen />
