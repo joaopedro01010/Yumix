@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+
+// Força a rota a ser dinâmica para evitar problemas no build
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
+    // Verificar se as variáveis de ambiente estão disponíveis
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return NextResponse.json(
+        { error: 'Supabase configuration not available' },
+        { status: 503 }
+      )
+    }
+
+    // Importar Supabase apenas quando necessário
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    )
+
     const { subscriptionId, status, platform } = await request.json()
 
     if (!subscriptionId || !status) {

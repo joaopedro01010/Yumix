@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Força a rota a ser dinâmica para evitar problemas no build
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
+    // Verificar se as variáveis de ambiente estão disponíveis
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { error: 'OpenAI API key not configured' },
+        { status: 503 }
+      )
+    }
+
     const { imageDataUrl, analysisType } = await request.json()
 
     if (!imageDataUrl || !analysisType) {
@@ -15,6 +21,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Importar OpenAI apenas quando necessário
+    const OpenAI = (await import('openai')).default
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
 
     // Definir prompts baseados no tipo de análise
     let systemPrompt = ""
@@ -157,6 +169,12 @@ Formato esperado:
 Responda APENAS com o JSON válido, sem explicações.`
 
   try {
+    // Verificar se OpenAI está disponível
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not available')
+    }
+
+    const OpenAI = (await import('openai')).default
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     })

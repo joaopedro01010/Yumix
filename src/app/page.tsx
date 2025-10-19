@@ -387,7 +387,7 @@ export default function YumixApp() {
     setCurrentScreen('saved')
   }
 
-  // Função para compartilhar refeição
+  // Função para compartilhar refeição - CORREÇÃO: String template corrigida
   const shareMeal = (meal: any) => {
     if (typeof navigator !== 'undefined' && navigator.share) {
       navigator.share({
@@ -397,7 +397,7 @@ export default function YumixApp() {
       })
     } else {
       // Fallback para navegadores que não suportam Web Share API
-      const shareText = `${meal.name} - ${meal.calories} kcal\nAnalisado com Yumix 🍽️✨`
+      const shareText = `${meal.name} - ${meal.calories} kcal - Analisado com Yumix 🍽️✨`
       if (typeof navigator !== 'undefined' && navigator.clipboard) {
         navigator.clipboard.writeText(shareText)
         alert('Informações copiadas para a área de transferência!')

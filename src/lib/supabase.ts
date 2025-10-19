@@ -1,9 +1,21 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Função para criar cliente Supabase com verificação de ambiente
+function createSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+  // Durante o build, as variáveis podem não estar disponíveis
+  // Retorna null para evitar erros de build
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn('Supabase environment variables not available')
+    return null
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey)
+}
+
+export const supabase = createSupabaseClient()
 
 // Tipos para o banco de dados
 export interface User {
@@ -74,6 +86,7 @@ export interface UserMission {
 // Funções de autenticação
 export const auth = {
   signUp: async (email: string, password: string, fullName?: string) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -87,6 +100,7 @@ export const auth = {
   },
 
   signIn: async (email: string, password: string) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -95,6 +109,7 @@ export const auth = {
   },
 
   signInWithGoogle: async () => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -105,6 +120,7 @@ export const auth = {
   },
 
   signInWithApple: async () => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'apple',
       options: {
@@ -115,16 +131,19 @@ export const auth = {
   },
 
   signOut: async () => {
+    if (!supabase) return { error: { message: 'Supabase not initialized' } }
     const { error } = await supabase.auth.signOut()
     return { error }
   },
 
   getCurrentUser: async () => {
+    if (!supabase) return { user: null, error: { message: 'Supabase not initialized' } }
     const { data: { user }, error } = await supabase.auth.getUser()
     return { user, error }
   },
 
   onAuthStateChange: (callback: (event: string, session: any) => void) => {
+    if (!supabase) return { data: { subscription: { unsubscribe: () => {} } } }
     return supabase.auth.onAuthStateChange(callback)
   },
 }
@@ -132,6 +151,7 @@ export const auth = {
 // Funções para usuários
 export const users = {
   getProfile: async (userId: string) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -141,6 +161,7 @@ export const users = {
   },
 
   updateProfile: async (userId: string, updates: Partial<User>) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('users')
       .update({ ...updates, updated_at: new Date().toISOString() })
@@ -151,6 +172,7 @@ export const users = {
   },
 
   incrementPhotoUsage: async (userId: string) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase.rpc('increment_photo_usage', {
       user_id: userId
     })
@@ -158,6 +180,7 @@ export const users = {
   },
 
   upgradeToPremium: async (userId: string, subscriptionId: string) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('users')
       .update({
@@ -173,6 +196,7 @@ export const users = {
   },
 
   cancelSubscription: async (userId: string) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('users')
       .update({
@@ -189,6 +213,7 @@ export const users = {
 // Funções para análises de refeições
 export const mealAnalyses = {
   create: async (analysis: Omit<MealAnalysis, 'id' | 'created_at'>) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('meal_analyses')
       .insert(analysis)
@@ -198,6 +223,7 @@ export const mealAnalyses = {
   },
 
   getByUser: async (userId: string, limit = 20) => {
+    if (!supabase) return { data: [], error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('meal_analyses')
       .select('*')
@@ -208,6 +234,7 @@ export const mealAnalyses = {
   },
 
   getById: async (id: string) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('meal_analyses')
       .select('*')
@@ -220,6 +247,7 @@ export const mealAnalyses = {
 // Funções para refeições salvas
 export const savedMeals = {
   save: async (userId: string, mealAnalysisId: string, name: string) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('saved_meals')
       .insert({
@@ -234,6 +262,7 @@ export const savedMeals = {
   },
 
   getByUser: async (userId: string) => {
+    if (!supabase) return { data: [], error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('saved_meals')
       .select(`
@@ -246,6 +275,7 @@ export const savedMeals = {
   },
 
   toggleFavorite: async (id: string, isFavorite: boolean) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('saved_meals')
       .update({ is_favorite: isFavorite })
@@ -256,6 +286,7 @@ export const savedMeals = {
   },
 
   delete: async (id: string) => {
+    if (!supabase) return { error: { message: 'Supabase not initialized' } }
     const { error } = await supabase
       .from('saved_meals')
       .delete()
@@ -267,6 +298,7 @@ export const savedMeals = {
 // Funções para perfil do usuário
 export const userProfiles = {
   get: async (userId: string) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
@@ -276,6 +308,7 @@ export const userProfiles = {
   },
 
   upsert: async (profile: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('user_profiles')
       .upsert({
@@ -288,6 +321,7 @@ export const userProfiles = {
   },
 
   updateStreak: async (userId: string, streakCount: number) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('user_profiles')
       .update({
@@ -301,6 +335,7 @@ export const userProfiles = {
   },
 
   addPoints: async (userId: string, points: number) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase.rpc('add_user_points', {
       user_id: userId,
       points_to_add: points
@@ -312,6 +347,7 @@ export const userProfiles = {
 // Funções para recompensas
 export const rewards = {
   getByUser: async (userId: string) => {
+    if (!supabase) return { data: [], error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('user_rewards')
       .select('*')
@@ -321,6 +357,7 @@ export const rewards = {
   },
 
   earn: async (userId: string, rewardType: string, rewardData: any) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('user_rewards')
       .insert({
@@ -337,6 +374,7 @@ export const rewards = {
 // Funções para missões
 export const missions = {
   getByUser: async (userId: string) => {
+    if (!supabase) return { data: [], error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('user_missions')
       .select('*')
@@ -346,6 +384,7 @@ export const missions = {
   },
 
   create: async (mission: Omit<UserMission, 'id' | 'created_at' | 'completed_at'>) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('user_missions')
       .insert(mission)
@@ -355,6 +394,7 @@ export const missions = {
   },
 
   updateProgress: async (id: string, progress: number) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('user_missions')
       .update({ progress })
@@ -365,6 +405,7 @@ export const missions = {
   },
 
   complete: async (id: string) => {
+    if (!supabase) return { data: null, error: { message: 'Supabase not initialized' } }
     const { data, error } = await supabase
       .from('user_missions')
       .update({

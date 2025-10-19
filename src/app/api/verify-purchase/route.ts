@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+
+// Força a rota a ser dinâmica para evitar problemas no build
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
+    // Verificar se as variáveis de ambiente estão disponíveis
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return NextResponse.json(
+        { error: 'Supabase configuration not available' },
+        { status: 503 }
+      )
+    }
+
     const { platform, transactionId, productId } = await request.json()
 
     if (!platform || !transactionId || !productId) {
@@ -11,6 +21,13 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Importar Supabase apenas quando necessário
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    )
 
     // Get user from auth header
     const authHeader = request.headers.get('authorization')
